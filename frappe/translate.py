@@ -202,6 +202,10 @@ def get_translation_dict_from_file(path, lang, app, throw=False) -> dict[str, st
 		csv_content = read_csv_file(path)
 
 		for item in csv_content:
+			if len(item) in [2, 3]:
+				item[0] = item[0].replace("\\n", "\n")
+				item[1] = item[1].replace("\\n", "\n")
+
 			if len(item) == 3 and item[2]:
 				key = item[0] + ":" + item[2]
 				translation_map[key] = strip(item[1])
@@ -327,6 +331,9 @@ def get_messages_from_doctype(name):
 
 		if d.fieldtype == "Select" and d.options:
 			options = d.options.split("\n")
+			# for workflow state, we don't want to translate the icon(css classnames)
+			if d.fieldname == "icon" and name == "Workflow State":
+				continue
 			if "icon" not in options[0]:
 				messages.extend(options)
 		if d.fieldtype == "HTML" and d.options:
