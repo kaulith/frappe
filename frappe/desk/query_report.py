@@ -443,13 +443,19 @@ def format_fields(data: frappe._dict) -> None:
 				index = col.get("fieldname") if isinstance(row, dict) else i
 				val = row.get(index) if isinstance(row, dict) else row[index]
 				if val:
-					row[index] = formatdate(val)
+					try:
+						row[index] = formatdate(val)
+					except Exception:
+						pass
 		elif col.get("fieldtype") == "Datetime":
 			for row in data.result:
 				index = col.get("fieldname") if isinstance(row, dict) else i
 				val = row.get(index) if isinstance(row, dict) else row[index]
 				if val:
-					row[index] = format_datetime(val)
+					try:
+						row[index] = format_datetime(val)
+					except Exception:
+						pass
 
 
 def build_xlsx_data(
