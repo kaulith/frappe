@@ -14,6 +14,7 @@ from frappe.core.doctype.data_import.importer import (
 	_get_tree_node_key,
 	_parse_number,
 	build_fields_dict_for_column_matching,
+	get_df_for_column_header,
 	get_tree_alias_fieldname,
 	uses_tree_alias_references,
 )
@@ -580,6 +581,8 @@ class TestImporter(IntegrationTestCase):
 		table_field = meta.get_field("table_field_1")
 		original_label = table_field.label
 		table_field.label = None
+		frappe.local.request_cache.clear()
+		self.addCleanup(frappe.local.request_cache.clear)
 		fields_dict = build_fields_dict_for_column_matching(doctype_name)
 		expected_key = "Child Title (table_field_1)"
 		self.assertIn(
@@ -588,6 +591,17 @@ class TestImporter(IntegrationTestCase):
 		expected_id_key = "ID (table_field_1)"
 		self.assertIn(expected_id_key, fields_dict, "ID fallback failed")
 		table_field.label = original_label  # maintain sanity in test env
+
+	def test_translated_header_maps_after_english_request(self):
+		self.addCleanup(setattr, frappe.local, "lang", frappe.local.lang)
+		self.addCleanup(frappe.local.request_cache.clear)
+
+		frappe.local.lang = "en"
+		self.assertIsNone(get_df_for_column_header(doctype_name, "Titel"))
+
+		frappe.local.request_cache.clear()
+		frappe.local.lang = "de"
+		self.assertEqual(get_df_for_column_header(doctype_name, "Titel").fieldname, "title")
 
 	def get_importer(self, doctype, import_file, update=False, use_sniffer=False, import_type=None):
 		data_import = frappe.new_doc("Data Import")
