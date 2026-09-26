@@ -14,6 +14,7 @@ from frappe.core.doctype.version.version import get_diff
 from frappe.locale import get_number_format
 from frappe.model import no_value_fields
 from frappe.utils import cint, cstr, duration_to_seconds, flt, update_progress_bar
+from frappe.utils.caching import request_cache
 from frappe.utils.csvutils import get_csv_content_from_google_sheets, read_csv_content
 from frappe.utils.data import escape_html
 from frappe.utils.number_format import NumberFormat
@@ -1840,6 +1841,7 @@ class Column:
 		return d
 
 
+@request_cache
 def build_fields_dict_for_column_matching(parent_doctype):
 	"""
 	Build a dict with various keys to match with column headers and value as docfield
@@ -1984,13 +1986,7 @@ def build_fields_dict_for_column_matching(parent_doctype):
 
 
 def get_df_for_column_header(doctype, header):
-	def build_fields_dict_for_doctype():
-		return build_fields_dict_for_column_matching(doctype)
-
-	df_by_labels_and_fieldname = frappe.cache.hget(
-		"data_import_column_header_map", doctype, generator=build_fields_dict_for_doctype
-	)
-	return df_by_labels_and_fieldname.get(header)
+	return build_fields_dict_for_column_matching(doctype).get(header)
 
 
 # utilities
